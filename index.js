@@ -2,17 +2,23 @@ const Twit = require('twit');
 const names = require('./names.js');
 const Bittrex = require('node-bittrex-api');
 
-const API_KEY = '';
-const SECRET = '';
+//remote this line and update API_KEY & SECRET
+const config = require('./config');
+
+const API_KEY = config.api_key;
+const SECRET = config.api_secret;
 
 let IDChecked = [];
 let multip = 1.25; // This value will be multiply with last ask price for buy order
 let BTCAmount = 0.1;
+let targetTwitterId = 961445378; //cosku: 176911783
+
 
 Bittrex.options({
     'apikey': API_KEY,
     'apisecret': SECRET,
 });
+
 
 const T = new Twit({
     consumer_key: 'EtOiey9DWfAeGBSAdARVnQ',
@@ -21,66 +27,93 @@ const T = new Twit({
     access_token_secret: 'sNHJGbEek0x8pfGCvUgNM6ZR66yFsvHDVg9ICLab7N0Sk'
 });
 
-let stream = T.stream('statuses/filter', {follow: '176911783' /*'961445378' */});
+let stream = T.stream('statuses/filter', {follow: targetTwitterId.toString()});
 
 stream.on('tweet', (tweet, err) => {
-    if (!isIn(tweet.id)) {
-        checkTweet(tweet.text);
+
+    if (tweet.user.id === targetTwitterId) {
+        if (!isIn(tweet.id)) {
+            checkTweet(tweet.text);
+        } else {
+            console.log(`Found tweet ${tweet.id} but it has already been processed`);
+        }
     } else {
-        console.log(`Found tweet ${tweet.id} but it has already been processed`);
+        //retweet
     }
+
 })
 
 function checkTweet(text) {
     text = text.toLowerCase();
 
     for (let val of names) {
-        if (text.includes("("+val.toLowerCase()+")") && text.toLowerCase().includes('coin of the day')) {
+        if (text.includes("(" + val.toLowerCase() + ")") && text.toLowerCase().includes('coin of the day')) {
 
             console.log(`${text} :: ${val}`);
             /**
              * Check Price
              */
-            Bittrex.getticker( { market : 'BTC-'+val.toUpperCase() }, function( ticker ) {
+            Bittrex.getticker({market: 'BTC-' + val.toUpperCase()}, function (ticker) {
 
-                let ask = ticker.result.Ask  * multip;
+                let ask = ticker.result.Ask * multip;
 
-                let quantity = parseInt(BTCAmount / ask)-1;
+                let quantity = parseInt(BTCAmount / ask) - 1;
                 /**
                  * Buy
                  */
                 Bittrex.tradebuy({
-                    MarketName: 'BTC-'+val.toUpperCase(),
+                    MarketName: 'BTC-' + val.toUpperCase(),
                     OrderType: 'LIMIT',
                     Quantity: quantity,
                     Rate: ask,
                     TimeInEffect: 'GOOD_TIL_CANCELLED',
                     ConditionType: 'NONE',
                     Target: 0,
-                }, function( data, err ) {
+                }, function (data, err) {
 
-                    console.log( data );
-                    console.log( err );
+                    console.log(err);
 
-                    let realAmount = data.bişi
+                    if (data !== null) {
+                        console.log(data);
 
-                    Bittrex.tradesell({
-                        MarketName: 'BTC-'+val.toUpperCase(),
-                        OrderType: 'LIMIT',
-                        Quantity: 1.00000000,
-                        Rate: ask * multip * 2.5,
-                        TimeInEffect: 'GOOD_TIL_CANCELLED',
-                        ConditionType: 'LESS_THAN',
-                        Target: 0,
-                    }, function( data, err ) {
-                        console.log( data );
-                        console.log( err );
-                    });
+
+                        /**
+                         * Balance check
+                         */
+
+
+                        setTimeout(() => {
+
+                            Bittrex.getbalance({currency: val.toUpperCase()}, function (balance, err) {
+                                if (err) {
+                                    return console.error(err);
+                                }
+
+                                Bittrex.tradesell({
+                                    MarketName: 'BTC-' + val.toUpperCase(),
+                                    OrderType: 'LIMIT',
+                                    Quantity: balance.Balance,
+                                    Rate: ask * multip * 2.5,
+                                    TimeInEffect: 'GOOD_TIL_CANCELLED',
+                                    ConditionType: 'LESS_THAN',
+                                    Target: 0,
+                                }, function (data, err) {
+                                    console.log(data);
+                                    console.log(err);
+                                });
+
+                            });
+
+                        }, 500);
+
+                    } else {
+                        console.log('Cant buy');
+                        console.log(err);
+                    }
 
                 });
 
             });
-
 
 
         }
