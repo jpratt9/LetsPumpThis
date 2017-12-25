@@ -1,6 +1,6 @@
 const Bittrex = require('node-bittrex-api');
 const Sleep = require('sleep');
-const Promp = require('prompt');
+const Prompt = require('prompt');
 
 
 //remove this line and update API_KEY & SECRET
@@ -19,8 +19,8 @@ Bittrex.options({
 
 let symbol;
 
-Promp.start();
-Promp.get(['symbol'], function (err, result) {
+Prompt.start();
+Prompt.get(['symbol'], function (err, result) {
 
     symbol = result.symbol.toUpperCase();
 
