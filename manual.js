@@ -10,7 +10,7 @@ const config = require('./config');
 const API_KEY = config.api_key;
 const SECRET = config.api_secret;
 
-let multip = 1.3; // This value will be multiply with last ask price for buy order
+let multip = 1.2; // This value will be multiply with last ask price for buy order
 let BTCAmount = 0.081;
 
 Bittrex.options({
@@ -58,10 +58,10 @@ Bittrex.getticker({market: 'BTC-' + symbol}, function (ticker) {
                         MarketName: 'BTC-' + symbol,
                         OrderType: 'LIMIT',
                         Quantity: balance.Balance,
-                        Rate: ask * 2,
+                        Rate: ask * 1.8,
                         TimeInEffect: 'GOOD_TIL_CANCELLED',
                         ConditionType: 'GREATER_THAN',
-                        Target: ask  * 2
+                        Target: ask  * 1.8
                     }, function (data, err) {
                         console.log(data);
                         console.log(err);
