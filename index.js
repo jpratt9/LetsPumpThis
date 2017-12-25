@@ -1,139 +1,123 @@
-const Twit = require('twit');
-const names = require('./names.js');
 const Bittrex = require('node-bittrex-api');
+const Sleep = require('sleep');
+const Promp = require('prompt');
 
-//remote this line and update API_KEY & SECRET
+
+//remove this line and update API_KEY & SECRET
 const config = require('./config');
 
 const API_KEY = config.api_key;
 const SECRET = config.api_secret;
 
-let IDChecked = [];
-let multip = 1.3; // This value will be multiply with last ask price for buy order
-let BTCAmount = 0.01;
-let targetTwitterId = 961445378; //
-let isStart = false;
+let multip = 1.2; // This value will be multiply with last ask price for buy order
+let BTCAmount = config.amount;
 
 Bittrex.options({
     'apikey': API_KEY,
     'apisecret': SECRET,
 });
 
+let symbol;
+
+Promp.start();
+Promp.get(['symbol'], function (err, result) {
+
+    symbol = result.symbol;
+
+    console.log('Symbol input:' + symbol);
+
+    /**
+     * Check Price
+     */
+    Bittrex.getticker({market: 'BTC-' + symbol}, function (ticker) {
+
+        console.log(ticker.result);
+
+        let bid = ticker.result.Ask;
+
+        let ask = bid * multip;
+        let sell = bid * 2;
+
+        console.log('We will buy until: ' + ask);
+        console.log('We will sell at: ' + sell);
+
+        let quantity = parseInt(BTCAmount / ask) - 1;
+        console.log(' Calculated amount:' + quantity);
+
+        /**
+         * Buy
+         */
+        Bittrex.tradebuy({
+            MarketName: 'BTC-' + symbol,
+            OrderType: 'LIMIT',
+            Quantity: quantity,
+            Rate: ask,
+            TimeInEffect: 'GOOD_TIL_CANCELLED',
+            ConditionType: 'LESS_THAN',
+            Target: bid
+        }, function (data, err) {
 
 
-const T = new Twit({
-    consumer_key: 'EtOiey9DWfAeGBSAdARVnQ',
-    consumer_secret: 'wy9SUMOEeFKeRYn5R9PiF0p2Ir5Oz8uplGnI045e9o',
-    access_token: '176911783-seArpdcBUDJ3RD2ysOtc39OOTLO39LOXcDZzcu1i',
-    access_token_secret: 'sNHJGbEek0x8pfGCvUgNM6ZR66yFsvHDVg9ICLab7N0Sk'
+            if (data !== null) {
+                console.log('BUY:');
+                console.log(data.result);
+
+                /**
+                 * Balance check
+                 */
+
+                checkBalanceAndSell(symbol, sell);
+
+            } else {
+                console.log('Cant buy');
+                console.log(err);
+            }
+
+        });
+
+    });
+
+
 });
 
-let stream = T.stream('statuses/filter', {follow: targetTwitterId.toString()});
 
-stream.on('tweet', (tweet, err) => {
+function checkBalanceAndSell(symbol, sell) {
 
-    if (tweet.user.id === targetTwitterId) {
-        if (!isIn(tweet.id) && isStart === false) {
-            checkTweet(tweet.text);
+    Sleep.sleep(1);
+    Bittrex.getbalance({currency: symbol}, function (result, err) {
+
+        console.log('Balance:');
+        let balance = result.result;
+        console.log(balance);
+
+        if (err) {
+            console.log('Balance ERR');
+            console.log(err);
+        }
+
+        if (balance.Balance === 0) {
+            console.log('Check Again');
+            checkBalanceAndSell(symbol, sell);
         } else {
-            console.log(`Found tweet ${tweet.id} but it has already been processed`);
-        }
-    } else {
-        console.log('Just retweet not mcAfee :) ');
-    }
 
-})
+            Bittrex.tradesell({
+                MarketName: 'BTC-' + symbol,
+                OrderType: 'LIMIT',
+                Quantity: balance.Balance,
+                Rate: sell,
+                TimeInEffect: 'GOOD_TIL_CANCELLED',
+                ConditionType: 'GREATER_THAN',
+                Target: sell
+            }, function (data, err) {
+                console.log('SELL:');
+                console.log(data.result);
 
-function checkTweet(text) {
-    text = text.toLowerCase();
-
-    for (let val of names) {
-        if (text.includes("(" + val.toLowerCase() + ")") && text.toLowerCase().includes('coin of the day') && isStart === false) {
-            isStart = true;
-
-            console.log(`${text} :: ${val}`);
-            /**
-             * Check Price
-             */
-            Bittrex.getticker({market: 'BTC-' + val.toUpperCase()}, function (ticker) {
-
-                let ask = ticker.result.Ask * multip;
-
-                let quantity = parseInt(BTCAmount / ask) - 1;
-                /**
-                 * Buy
-                 */
-                Bittrex.tradebuy({
-                    MarketName: 'BTC-' + val.toUpperCase(),
-                    OrderType: 'LIMIT',
-                    Quantity: quantity,
-                    Rate: ticker.result.Ask,
-                    TimeInEffect: 'GOOD_TIL_CANCELLED',
-                    ConditionType: 'LESS_THAN',
-                    Target: ask
-                }, function (data, err) {
-
+                if (err) {
+                    console.log('Sell ERR');
                     console.log(err);
-
-                    if (data !== null) {
-                        console.log(data);
-
-                        /**
-                         * Balance check
-                         */
-                        setTimeout(()=>{
-
-                            Bittrex.getbalance({currency: val.toUpperCase()}, function (result, err) {
-
-
-                                let balance = result.result;
-                                Bittrex.tradesell({
-                                    MarketName: 'BTC-' + val.toUpperCase(),
-                                    OrderType: 'LIMIT',
-                                    Quantity: balance.Balance,
-                                    Rate: ask * 2,
-                                    TimeInEffect: 'GOOD_TIL_CANCELLED',
-                                    ConditionType: 'GREATER_THAN',
-                                    Target: ask  * 2
-                                }, function (data, err) {
-                                    console.log(data);
-                                    console.log(err);
-                                });
-
-                            });
-
-                        }, 4000);
-
-                    } else {
-                        console.log('Cant buy');
-                        console.log(err);
-                    }
-
-                });
-
+                }
             });
-
-
         }
-    }
 
+    });
 }
-
-function isIn(id) {
-    for (var val of IDChecked) {
-        if (val === id) {
-            return true;
-        }
-    }
-    IDChecked.push(id);
-    return false;
-}
-
-
-/*
-Make sure below is commented out otherwise it will go bad
-Test @ works Made Purchase {"orderNumber":"91514514058","resultingTrades":[{"amount":"0.00270000","date":"2017-12-24 ","rate":"0.03711015","total":"0.00010019","tradeID":"","type":"buy"}]}
-//let a = 'zec coin of the day';
-
-//checkTweet(a);
-*/
