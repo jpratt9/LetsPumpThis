@@ -35,13 +35,13 @@ Promp.get(['symbol'], function (err, result) {
 
         let bid = ticker.result.Ask;
 
-        let ask = bid * multip;
+        let buy = bid * multip;
         let sell = bid * 2;
 
-        console.log('We will buy until: ' + ask);
+        console.log('We will buy until: ' + buy);
         console.log('We will sell at: ' + sell);
 
-        let quantity = parseInt(BTCAmount / ask) - 1;
+        let quantity = parseInt(BTCAmount / buy) - 1;
         console.log(' Calculated amount:' + quantity);
 
         /**
@@ -51,7 +51,7 @@ Promp.get(['symbol'], function (err, result) {
             MarketName: 'BTC-' + symbol,
             OrderType: 'LIMIT',
             Quantity: quantity,
-            Rate: ask,
+            Rate: buy,
             TimeInEffect: 'GOOD_TIL_CANCELLED',
             ConditionType: 'LESS_THAN',
             Target: bid
