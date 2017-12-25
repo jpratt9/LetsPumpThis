@@ -22,7 +22,7 @@ let symbol;
 Promp.start();
 Promp.get(['symbol'], function (err, result) {
 
-    symbol = result.symbol;
+    symbol = result.symbol.toUpperCase();
 
     console.log('Symbol input:' + symbol);
 
