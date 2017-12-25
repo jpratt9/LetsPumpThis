@@ -64,7 +64,7 @@ function checkTweet(text) {
                  * Buy
                  */
                 Bittrex.tradebuy({
-                    MarketName: 'BTC-' + symbol,
+                    MarketName: 'BTC-' + val.toUpperCase(),
                     OrderType: 'LIMIT',
                     Quantity: quantity,
                     Rate: ticker.result.Ask,
@@ -81,12 +81,14 @@ function checkTweet(text) {
                         /**
                          * Balance check
                          */
-                        Bittrex.getbalance({currency: val.toUpperCase()}, function (result, err) {
+                        setTimeout(()=>{
+
+                            Bittrex.getbalance({currency: val.toUpperCase()}, function (result, err) {
 
 
                                 let balance = result.result;
                                 Bittrex.tradesell({
-                                    MarketName: 'BTC-' + symbol,
+                                    MarketName: 'BTC-' + val.toUpperCase(),
                                     OrderType: 'LIMIT',
                                     Quantity: balance.Balance,
                                     Rate: ask * 2,
@@ -98,8 +100,9 @@ function checkTweet(text) {
                                     console.log(err);
                                 });
 
-                        });
+                            });
 
+                        }, 4000);
 
                     } else {
                         console.log('Cant buy');

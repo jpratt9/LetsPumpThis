@@ -1,3 +1,7 @@
+
+let symbol = 'RDD';
+
+
 const Bittrex = require('node-bittrex-api');
 
 //remote this line and update API_KEY & SECRET
@@ -15,7 +19,6 @@ Bittrex.options({
 });
 
 
-console.log(`${text} :: ${val}`);
 /**
  * Check Price
  */
@@ -45,23 +48,28 @@ Bittrex.getticker({market: 'BTC-' + symbol}, function (ticker) {
             /**
              * Balance check
              */
-            Bittrex.getbalance({currency: symbol}, function (result, err) {
+            setTimeout(()=>{
 
-                let balance = result.result;
-                Bittrex.tradesell({
-                    MarketName: 'BTC-' + symbol,
-                    OrderType: 'LIMIT',
-                    Quantity: balance.Balance,
-                    Rate: ask * 2,
-                    TimeInEffect: 'GOOD_TIL_CANCELLED',
-                    ConditionType: 'GREATER_THAN',
-                    Target: ask  * 2,
-                }, function (data, err) {
-                    console.log(data);
-                    console.log(err);
+                Bittrex.getbalance({currency: symbol}, function (result, err) {
+
+
+                    let balance = result.result;
+                    Bittrex.tradesell({
+                        MarketName: 'BTC-' + symbol,
+                        OrderType: 'LIMIT',
+                        Quantity: balance.Balance,
+                        Rate: ask * 2,
+                        TimeInEffect: 'GOOD_TIL_CANCELLED',
+                        ConditionType: 'GREATER_THAN',
+                        Target: ask  * 2
+                    }, function (data, err) {
+                        console.log(data);
+                        console.log(err);
+                    });
+
                 });
 
-            });
+            }, 4000);
 
 
         } else {
