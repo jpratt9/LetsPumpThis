@@ -9,7 +9,7 @@ const API_KEY = config.api_key;
 const SECRET = config.api_secret;
 
 let IDChecked = [];
-let multip = 1.2; // This value will be multiply with last ask price for buy order
+let multip = 1.3; // This value will be multiply with last ask price for buy order
 let BTCAmount = 0.01;
 let targetTwitterId = 961445378; //
 let isStart = false;
@@ -64,13 +64,13 @@ function checkTweet(text) {
                  * Buy
                  */
                 Bittrex.tradebuy({
-                    MarketName: 'BTC-' + val.toUpperCase(),
+                    MarketName: 'BTC-' + symbol,
                     OrderType: 'LIMIT',
                     Quantity: quantity,
-                    Rate: ask,
+                    Rate: ticker.result.Ask,
                     TimeInEffect: 'GOOD_TIL_CANCELLED',
                     ConditionType: 'LESS_THAN',
-                    Target: ticker.result.Ask,
+                    Target: ask
                 }, function (data, err) {
 
                     console.log(err);
@@ -86,13 +86,13 @@ function checkTweet(text) {
 
                                 let balance = result.result;
                                 Bittrex.tradesell({
-                                    MarketName: 'BTC-' + val.toUpperCase(),
+                                    MarketName: 'BTC-' + symbol,
                                     OrderType: 'LIMIT',
                                     Quantity: balance.Balance,
-                                    Rate: ask * multip * 2,
+                                    Rate: ask * 2,
                                     TimeInEffect: 'GOOD_TIL_CANCELLED',
                                     ConditionType: 'GREATER_THAN',
-                                    Target: ask * multip * 2,
+                                    Target: ask  * 2
                                 }, function (data, err) {
                                     console.log(data);
                                     console.log(err);
