@@ -31,4 +31,4 @@ Just
 ```
 
 ### Last but not least;
-After a few PUMP if you get some shitcoins, you can send me ETH for not being parasitic asshole: 0x07a067f7ed6769d7d8172e386340e83e3da16107
+ETH: 0xfC6f3f9d76B3c9a1CedAE1856D3fE0Eece8391F9
