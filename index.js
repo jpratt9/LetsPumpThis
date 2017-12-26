@@ -112,6 +112,8 @@ function checkBalanceAndSell(symbol, sell) {
                 console.log('SELL:');
                 console.log(data.result);
 
+                checkBalanceAndSell(symbol, sell);
+
                 if (err) {
                     console.log('Sell ERR');
                     console.log(err);
