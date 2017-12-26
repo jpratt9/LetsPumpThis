@@ -9,7 +9,7 @@ const config = require('./config');
 const API_KEY = config.api_key;
 const SECRET = config.api_secret;
 
-let multip = 1.2; // This value will be multiply with last ask price for buy order
+let multip = 1.5; // This value will be multiply with last ask price for buy order
 let BTCAmount = config.amount;
 
 Bittrex.options({
@@ -21,6 +21,10 @@ let symbol;
 
 Prompt.start();
 Prompt.get(['symbol'], function (err, result) {
+
+    if(result.symbol === undefined){
+        return;
+    }
 
     symbol = result.symbol.toUpperCase();
 
@@ -36,7 +40,7 @@ Prompt.get(['symbol'], function (err, result) {
         let bid = ticker.result.Ask;
 
         let buy = bid * multip;
-        let sell = bid * 2;
+        let sell = bid * 1.9;
 
         console.log('We will buy until: ' + buy);
         console.log('We will sell at: ' + sell);
@@ -54,7 +58,7 @@ Prompt.get(['symbol'], function (err, result) {
             Rate: buy,
             TimeInEffect: 'GOOD_TIL_CANCELLED',
             ConditionType: 'LESS_THAN',
-            Target: bid
+            Target: buy
         }, function (data, err) {
 
 
